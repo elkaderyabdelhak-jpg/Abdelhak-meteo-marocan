@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meteo Maroc</title>
+<style>body{background:linear-gradient(#5B5CF6,#1E40AF);min-height:100vh;color:#fff;font-family:sans-serif;padding:15px;text-align:center}
+input,button{padding:14px;border-radius:12px;border:none;margin:5px}input{width:60%}button{background:#10B981;color:#fff;font-weight:bold}
+.card{background:rgba(255,255,255,.15);border-radius:20px;padding:20px;margin-top:15px}</style>
+</head><body>
+<h2>🇲🇦 Météo Maroc</h2>
+<input id="city" placeholder="كتب مدينة: Midelt"><button onclick="search()">Search</button>
+<button onclick="myLoc()">📍 بلاصتي</button>
+<div class="card" id="box">كتحميل...</div>
+<script>
+let KEY='last_city_meteo';
+async function getPlace(c){let r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${c}&count=1&language=fr`);let j=await r.json();return j.results[0]}
+async function getWeather(lat,lon){let r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code&timezone=auto`);return await r.json()}
+async function show(city,lat,lon,w){document.getElementById('box').innerHTML=`<h3>📍 ${city}</h3><h1>${Math.round(w.current.temperature_2m)}°C</h1><p>Feels ${Math.round(w.current.apparent_temperature)}°C</p><p>${new Date().toLocaleString()}</p>`;localStorage.setItem(KEY,JSON.stringify({city,lat,lon}))}
+async function search(){let c=document.getElementById('city').value||'Fes';let p=await getPlace(c);let w=await getWeather(p.latitude,p.longitude);show(p.name,p.latitude,p.longitude,w)}
+async function myLoc(){try{let r=await fetch('https://ipapi.co/json/');let j=await r.json();let c=j.city||'Fes';let p=await getPlace(c);let w=await getWeather(p.latitude,p.longitude);show(p.name,p.latitude,p.longitude,w)}catch(e){search()}}
+// ملي كتحل التطبيق: جيب آخر مدينة محفوظة
+(async()=>{let s=localStorage.getItem(KEY);if(s){s=JSON.parse(s);let w=await getWeather(s.lat,s.lon);show(s.city,s.lat,s.lon,w)}else{myLoc()}})();
+</script></body></html>
